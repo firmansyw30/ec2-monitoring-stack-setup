@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+
+rule_files:
+
+scrape_configs:
+%{ for job_name, job in scrape_targets ~}
+  - job_name: "${job_name}"
+%{ if job.metrics_path != "/metrics" ~}
+    metrics_path: "${job.metrics_path}"
+%{ endif ~}
+%{ if job.scrape_timeout != "30s" ~}
+    scrape_timeout: "${job.scrape_timeout}"
+%{ endif ~}
+    static_configs:
+      - targets: ${jsonencode(job.targets)}
+%{ if length(job.labels) > 0 ~}
+        labels:
+%{ for label_key, label_value in job.labels ~}
+          ${label_key}: "${label_value}"
+%{ endfor ~}
+%{ endif ~}
+%{ endfor ~}
